@@ -194,6 +194,10 @@ body {
     flex-direction: row;
     justify-content: center;
   }
+  
+  .landing-content {
+    max-width: 1200px;
+  }
 }
 
 .cta-button {
@@ -251,8 +255,14 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .features-preview {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .feature-card {
@@ -263,11 +273,17 @@ body {
   text-align: center;
   backdrop-filter: blur(10px);
   transition: all var(--transition-normal);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .feature-card:hover {
   transform: translateY(-5px);
   background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .feature-icon {
@@ -458,6 +474,11 @@ body {
   .content-header {
     margin-bottom: 2rem;
   }
+  
+  .features-preview {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -630,7 +651,6 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 0.5rem;
 }
 
 .logo-icon {
@@ -1113,6 +1133,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
+  position: relative;
 }
 
 /* Brand Logo */
@@ -1185,12 +1206,25 @@ body {
 .desktop-nav {
   display: none;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
 }
 
 @media (min-width: 768px) {
   .desktop-nav {
     display: flex;
+    z-index: 1;
+  }
+  
+  /* Ensure logo and auth section appear above the nav */
+  .brand-logo, .desktop-auth {
+    position: relative;
+    z-index: 2;
   }
 }
 
@@ -1398,6 +1432,7 @@ body {
 .dropdown-item:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--color-primary);
+  border-radius: var(--radius-md) var(--radius-md);
 }
 
 .dropdown-item.logout {
@@ -1407,6 +1442,7 @@ body {
 .dropdown-item.logout:hover {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .dropdown-divider {

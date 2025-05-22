@@ -32,12 +32,6 @@ export default function Navbar() {
 
   const navigationItems = [
     {
-      name: 'Create',
-      href: '/generate',
-      icon: PlusIcon,
-      description: 'Generate AI art'
-    },
-    {
       name: 'Explore',
       href: '/explore',
       icon: PhotoIcon,

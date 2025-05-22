@@ -7,6 +7,7 @@ import ArtCard from "@/components/ArtCard";
 import axios from "axios";
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import './fullPageLoader.css';
 
 interface Art {
   _id: string;
@@ -15,17 +16,17 @@ interface Art {
 }
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [arts, setArts] = useState<Art[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingArts, setIsLoadingArts] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       const fetchArts = async () => {
-        setIsLoading(true);
+        setIsLoadingArts(true);
         try {
           const response = await axios.get(
             `${process.env.NEXT_PUBLIC_API_URL}/api/art/timeline`,
@@ -33,7 +34,14 @@ export default function Home() {
               params: { page, limit: 10 },
             }
           );
-          setArts((prev) => [...prev, ...response.data.data]);
+          
+          // Sayfa 1'se, sanat eserlerini tamamen değiştir, değilse mevcut listeye ekle
+          if (page === 1) {
+            setArts(response.data.data);
+          } else {
+            setArts((prev) => [...prev, ...response.data.data]);
+          }
+          
           setHasMore(
             response.data.pagination.page *
               response.data.pagination.limit <
@@ -42,7 +50,7 @@ export default function Home() {
         } catch (error) {
           console.error("Error fetching timeline:", error);
         } finally {
-          setIsLoading(false);
+          setIsLoadingArts(false);
         }
       };
 
@@ -54,6 +62,19 @@ export default function Home() {
     if (hasMore) setPage((prev) => prev + 1);
   };
 
+  // Show loading spinner while authentication state is being determined
+  if (isAuthLoading) {
+    return (
+      <div className="full-page-loader">
+        <div className="loader-content">
+          <div className="spinner"></div>
+          <p>Loading your experience...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Only render landing page after we've confirmed user is not authenticated
   if (!isAuthenticated) {
     return (
       <div className="landing-container">
@@ -128,7 +149,7 @@ export default function Home() {
         </div>
         
         <div className="gallery-grid">
-          {isLoading && page === 1 ? (
+          {isLoadingArts && page === 1 ? (
             // Initial loading state
             Array.from({ length: 9 }).map((_, index) => (
               <div key={index} className="skeleton-card">
@@ -148,7 +169,7 @@ export default function Home() {
           )}
           
           {/* Load more loading state */}
-          {isLoading && page > 1 && (
+          {isLoadingArts && page > 1 && (
             Array.from({ length: 3 }).map((_, index) => (
               <div key={`loading-${index}`} className="skeleton-card">
                 <div className="skeleton-image"></div>
@@ -161,7 +182,7 @@ export default function Home() {
           )}
         </div>
         
-        {hasMore && !isLoading && (
+        {hasMore && !isLoadingArts && (
           <div className="load-more-container">
             <button onClick={loadMore} className="load-more-button">
               <span>Load More Artworks</span>

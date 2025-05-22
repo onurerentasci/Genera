@@ -28,15 +28,15 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    res.status(201).json({
+    });    res.status(201).json({
       success: true,
       message: 'User registered successfully',
+      token, // Token'ı response'da dön
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (error) {

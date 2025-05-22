@@ -12,12 +12,13 @@ export default function Login() {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const router = useRouter();
   const { login, isLoading, error } = useAuth();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
-      router.push("/");
+      const loginSuccess = await login(email, password);
+      if (loginSuccess) {
+        router.push("/");
+      }
     } catch (err) {
       // Error is handled by the auth context
     }

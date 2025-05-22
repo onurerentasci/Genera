@@ -17,8 +17,8 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (username: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   error: string | null;
 }
@@ -55,8 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${authToken}`
-        }
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -76,7 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -87,17 +88,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         { email, password },
         { withCredentials: true }
       );
-      setUser(response.data.user);
-      setToken(response.data.token);
-      router.push('/');
+      
+      const userData = response.data.user;
+      const tokenData = response.data.token;
+      
+      setUser(userData);
+      setToken(tokenData);
+      
+      // Token'ı localStorage'a kaydet
+      if (tokenData) {
+        localStorage.setItem('token', tokenData);
+      }
+      
+      return true; // Return true for successful login
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');
+      return false; // Return false for failed login
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Register function
+  };  // Register function
   const register = async (username: string, email: string, password: string) => {
     setIsLoading(true);
     setError(null);
@@ -107,11 +117,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         { username, email, password },
         { withCredentials: true }
       );
-      setUser(response.data.user);
-      setToken(response.data.token);
-      router.push('/');
+      
+      const userData = response.data.user;
+      const tokenData = response.data.token;
+      
+      setUser(userData);
+      setToken(tokenData);
+      
+      // Token'ı localStorage'a kaydet
+      if (tokenData) {
+        localStorage.setItem('token', tokenData);
+      }
+      
+      return true; // Return true for successful registration
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed');
+      return false; // Return false for failed registration
     } finally {
       setIsLoading(false);
     }
@@ -121,8 +142,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {}, { withCredentials: true });
+      
+      // Kullanıcı verilerini temizle
       setUser(null);
       setToken(null);
+      
+      // localStorage'dan token'ı temizle
+      localStorage.removeItem('token');
+      
       router.push('/login');
     } catch (err) {
       console.error('Logout failed:', err);

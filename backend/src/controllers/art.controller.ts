@@ -7,7 +7,7 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
     const { prompt } = req.body;
 
     // Generate a dynamic image URL based on the prompt
-    const mockImageUrl = `http://via.placeholder.com/600x400?text=${encodeURIComponent(prompt)}`;
+    const mockImageUrl = `https://placehold.co/600x400.png?text=${encodeURIComponent(prompt)}`;
 
     res.status(200).json({ success: true, imageUrl: mockImageUrl });
   } catch (error) {
