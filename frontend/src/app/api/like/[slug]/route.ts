@@ -3,13 +3,13 @@ import axios from "axios";
 
 // Like art post
 export async function POST(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: { slug: string } }
 ) {
   try {
-    const body = await request.json();
-    const { artId } = body;
+    const { slug } = params;
 
-    if (!artId) {
+    if (!slug) {
       return NextResponse.json(
         { success: false, message: "Art ID is required" },
         { status: 400 }
@@ -28,7 +28,7 @@ export async function POST(
 
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     const response = await axios.post(
-      `${backendUrl}/api/art/like/${artId}`,
+      `${backendUrl}/api/art/like/${slug}`,
       {},
       {
         headers: {
@@ -52,13 +52,13 @@ export async function POST(
 
 // Unlike art post
 export async function DELETE(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: { slug: string } }
 ) {
   try {
-    const { searchParams } = new URL(request.url);
-    const artId = searchParams.get("artId");
+    const { slug } = params;
 
-    if (!artId) {
+    if (!slug) {
       return NextResponse.json(
         { success: false, message: "Art ID is required" },
         { status: 400 }
@@ -77,7 +77,7 @@ export async function DELETE(
 
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
     const response = await axios.delete(
-      `${backendUrl}/api/art/like/${artId}`,
+      `${backendUrl}/api/art/like/${slug}`,
       {
         headers: {
           Cookie: `token=${token}`,

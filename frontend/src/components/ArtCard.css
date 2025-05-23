@@ -1,0 +1,109 @@
+/* ArtCard Styles */
+.art-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.art-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.art-image {
+  width: 100%;
+  height: auto;
+  transition: transform 0.3s ease;
+}
+
+.art-card:hover .art-image {
+  transform: scale(1.05);
+}
+
+.art-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.art-card:hover .art-overlay {
+  opacity: 1;
+}
+
+.art-info-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  color: white;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.art-card:hover .art-info-top {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.art-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  color: white;
+  font-weight: bold;
+}
+
+.art-stats {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  color: white;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.art-card:hover .art-stats {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.art-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.art-stat:hover {
+  transform: scale(1.1);
+}
+
+.art-like-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: white;
+  padding: 0;
+}
+
+.art-like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}

@@ -13,10 +13,19 @@ interface Art {
   _id: string;
   imageUrl: string;
   title: string;
+  createdBy: {
+    _id: string;
+    username: string;
+  };
+  createdAt: string;
+  likesCount: number;
+  commentsCount: number;
+  views: number;
+  likes: string[];
 }
 
 export default function Home() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [arts, setArts] = useState<Art[]>([]);
   const [page, setPage] = useState(1);
@@ -26,10 +35,9 @@ export default function Home() {
   useEffect(() => {
     if (isAuthenticated) {
       const fetchArts = async () => {
-        setIsLoadingArts(true);
-        try {
+        setIsLoadingArts(true);        try {
           const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/art/timeline`,
+            `/api/art/timeline`,
             {
               params: { page, limit: 10 },
             }
@@ -159,11 +167,37 @@ export default function Home() {
                   <div className="skeleton-subtitle"></div>
                 </div>
               </div>
-            ))
-          ) : (
+            ))          ) : (
             arts.map((art, index) => (
-              <div key={`${art._id}-${index}`} className="art-card-wrapper">
-                <ArtCard imageUrl={art.imageUrl} title={art.title} />
+              <div key={`${art._id}-${index}`} className="art-card-wrapper">                <ArtCard 
+                  id={art._id}
+                  imageUrl={art.imageUrl} 
+                  title={art.title}
+                  createdBy={{ 
+                    id: art.createdBy._id, 
+                    username: art.createdBy.username 
+                  }}
+                  createdAt={art.createdAt || new Date().toISOString()}                  likesCount={art.likesCount || 0}
+                  commentsCount={art.commentsCount || 0}
+                  views={art.views || 0}
+                  liked={user ? art.likes?.includes(user.id) : false}
+                  onLike={(id, liked) => {
+                    if (!user) return;
+                    
+                    // Update local state when a like/unlike happens
+                    setArts(arts.map(a => 
+                      a._id === id 
+                        ? { 
+                            ...a, 
+                            likesCount: liked ? a.likesCount + 1 : a.likesCount - 1,
+                            likes: liked 
+                              ? [...(a.likes || []), user.id] 
+                              : (a.likes || []).filter(uid => uid !== user.id)
+                          } 
+                        : a
+                    ));
+                  }}
+                />
               </div>
             ))
           )}
