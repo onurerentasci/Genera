@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { HeartIcon, ChatBubbleLeftIcon, EyeIcon, ClockIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { useAuth } from '@/context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
+import Navbar from '@/components/Navbar';
 
 interface Comment {
   _id: string;
@@ -35,8 +36,8 @@ interface Art {
   views: number;
 }
 
-export default function ArtDetailPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
+export default function ArtDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   
@@ -213,140 +214,113 @@ export default function ArtDetailPage({ params }: { params: { slug: string } }) 
 
   return (
     <div className="min-h-screen bg-background-light py-10">
-      <div className="container mx-auto px-4">
-        {/* Art Display Section */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Image Section */}
-            <div className="relative h-[500px] md:h-auto">
-              <img 
-                src={art.imageUrl} 
-                alt={art.title} 
-                className="w-full h-full object-cover"
-              />
+      <Navbar />
+      <div className="container mx-auto px-4 flex justify-center items-center min-h-screen min-w-screen">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Image Section */}
+          <div className="relative h-[500px] md:h-auto">
+            <img 
+              src={art.imageUrl} 
+              alt={art.title} 
+              className="w-full h-full object-cover rounded-lg shadow-md"
+            />
+          </div>
+          {/* Details Section */}
+          <div className="p-6 bg-gray-900 text-white rounded-lg shadow-lg">
+            <h1 className="text-3xl font-bold mb-4">{art.title}</h1>
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center">
+                <div className="bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
+                  <span className="text-white font-medium">
+                    {art.createdBy.username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="ml-2">@{art.createdBy.username}</span>
+              </div>
+              <div className="flex items-center">
+                <ClockIcon className="h-5 w-5 mr-1" />
+                <span>{formatDistanceToNow(new Date(art.createdAt), { addSuffix: true })}</span>
+              </div>
             </div>
-            
-            {/* Details Section */}
-            <div className="p-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">{art.title}</h1>
-              
-              {/* Creator and Date Info */}
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center">
-                  <div className="bg-gray-200 rounded-full h-10 w-10 flex items-center justify-center">
-                    <span className="text-gray-700 font-medium">
-                      {art.createdBy.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="ml-2 text-gray-700">@{art.createdBy.username}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <ClockIcon className="h-5 w-5 mr-1" />
-                  <span>{formatDistanceToNow(new Date(art.createdAt), { addSuffix: true })}</span>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold mb-2">Prompt</h2>
+              <div className="bg-gray-700 p-4 rounded-lg">
+                <div className="flex items-start">
+                  <PencilIcon className="h-5 w-5 text-gray-400 mt-1 mr-2" />
+                  <p>{art.prompt}</p>
                 </div>
               </div>
-              
-              {/* Prompt Section */}
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Prompt</h2>
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <div className="flex items-start">
-                    <PencilIcon className="h-5 w-5 text-gray-500 mt-1 mr-2" />
-                    <p className="text-gray-700">{art.prompt}</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Stats Section */}
-              <div className="flex justify-around py-4 mb-6 border-t border-b border-gray-200">
-                <div className="flex items-center">
-                  <button 
-                    onClick={handleLike}
-                    className="flex items-center hover:scale-110 transition-transform"
-                  >
-                    {isLiked ? (
-                      <HeartIconSolid className="h-6 w-6 text-red-500" />
-                    ) : (
-                      <HeartIcon className="h-6 w-6 text-gray-700" />
-                    )}
-                  </button>
-                  <span className="ml-1 text-gray-700">{art.likesCount}</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <ChatBubbleLeftIcon className="h-6 w-6 text-gray-700" />
-                  <span className="ml-1 text-gray-700">{art.commentsCount}</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <EyeIcon className="h-6 w-6 text-gray-700" />
-                  <span className="ml-1 text-gray-700">{art.views}</span>
-                </div>
-              </div>
-              
-              {/* Comments Section */}
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800 mb-4">Comments</h2>
-                
-                {/* Comment Form */}
-                {isAuthenticated && (
-                  <form onSubmit={handleSubmitComment} className="mb-6">
-                    <div className="flex">
-                      <input
-                        type="text"
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Add a comment..."
-                        className="flex-1 border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
-                      <button
-                        type="submit"
-                        disabled={isSubmittingComment || !newComment.trim()}
-                        className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-dark transition-colors disabled:bg-gray-400"
-                      >
-                        Post
-                      </button>
-                    </div>
-                  </form>
-                )}
-                
-                {/* Comments List */}
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                  {art.comments && art.comments.length > 0 ? (
-                    art.comments.map((comment) => (
-                      <div key={comment._id} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center">
-                            <div className="bg-gray-200 rounded-full h-8 w-8 flex items-center justify-center">
-                              <span className="text-gray-700 font-medium">
-                                {comment.createdBy.username.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <span className="ml-2 font-medium text-gray-800">
-                              @{comment.createdBy.username}
-                            </span>
-                          </div>
-                          <div className="flex items-center">
-                            <span className="text-sm text-gray-500 mr-2">
-                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                            </span>
-                            {isAuthenticated && user && comment.createdBy._id === user.id && (
-                              <button 
-                                onClick={() => handleDeleteComment(comment._id)}
-                                className="text-gray-500 hover:text-red-500 transition-colors"
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <p className="mt-2 text-gray-700">{comment.text}</p>
-                      </div>
-                    ))
+            </div>
+            <div className="flex justify-around py-4 mb-6 border-t border-b border-gray-600">
+              <div className="flex items-center">
+                <button onClick={handleLike} className="flex items-center">
+                  {isLiked ? (
+                    <HeartIconSolid className="h-6 w-6 text-red-500" />
                   ) : (
-                    <p className="text-gray-500 text-center py-4">No comments yet. Be the first to comment!</p>
+                    <HeartIcon className="h-6 w-6 text-gray-400" />
                   )}
-                </div>
+                </button>
+                <span className="ml-1">{art.likesCount}</span>
+              </div>
+              <div className="flex items-center">
+                <ChatBubbleLeftIcon className="h-6 w-6 text-gray-400" />
+                <span className="ml-1">{art.commentsCount}</span>
+              </div>
+              <div className="flex items-center">
+                <EyeIcon className="h-6 w-6 text-gray-400" />
+                <span className="ml-1">{art.views}</span>
+              </div>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Comments</h2>
+              {isAuthenticated && (
+                <form onSubmit={handleSubmitComment} className="mb-6 flex">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment..."
+                    className="flex-1 border border-gray-600 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmittingComment || !newComment.trim()}
+                    className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-dark transition-colors disabled:bg-gray-400"
+                  >
+                    Post
+                  </button>
+                </form>
+              )}
+              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                {art.comments && art.comments.length > 0 ? (
+                  art.comments.map((comment) => (
+                    <div key={comment._id} className="bg-gray-700 p-4 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center">
+                          <div className="bg-gray-600 rounded-full h-8 w-8 flex items-center justify-center">
+                            <span className="text-white font-medium">
+                              {comment.createdBy.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="ml-2 font-medium">@{comment.createdBy.username}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-sm text-gray-400 mr-2">
+                            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                          </span>
+                          {isAuthenticated && user && comment.createdBy._id === user.id && (
+                            <button onClick={() => handleDeleteComment(comment._id)} className="text-gray-400 hover:text-red-500">
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-gray-300">{comment.text}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-center py-4">No comments yet. Be the first to comment!</p>
+                )}
               </div>
             </div>
           </div>
