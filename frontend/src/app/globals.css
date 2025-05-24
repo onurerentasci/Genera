@@ -57,8 +57,12 @@
 
 * {
   box-sizing: border-box;
-  padding: 0;
+}
+
+/* Reset base elements but allow components to override */
+html, body, div, h1, h2, h3, h4, h5, h6, p, ul, ol, li {
   margin: 0;
+  padding: 0;
 }
 
 html {

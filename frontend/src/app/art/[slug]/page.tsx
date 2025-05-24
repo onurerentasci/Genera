@@ -211,12 +211,10 @@ export default function ArtDetailPage({ params }: { params: Promise<{ slug: stri
       </div>
     );
   }
-
-  return (
-    <div className="min-h-screen bg-background-light py-10">
+  return (    <div className="min-h-screen bg-background-light py-10">
       <Navbar />
-      <div className="container mx-auto px-4 flex justify-center items-center min-h-screen min-w-screen">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div style={{padding: '5rem 1rem', margin: '0 auto', display: 'flex', justifyContent: 'center'}} className="container">
+        <div style={{gap: '2.5rem', maxWidth: '72rem', width: '100%'}} className="grid grid-cols-1 md:grid-cols-2">
           {/* Image Section */}
           <div className="relative h-[500px] md:h-auto">
             <img 
@@ -224,34 +222,29 @@ export default function ArtDetailPage({ params }: { params: Promise<{ slug: stri
               alt={art.title} 
               className="w-full h-full object-cover rounded-lg shadow-md"
             />
-          </div>
-          {/* Details Section */}
-          <div className="p-6 bg-gray-900 text-white rounded-lg shadow-lg">
-            <h1 className="text-3xl font-bold mb-4">{art.title}</h1>
-            <div className="flex justify-between items-center mb-6">
+          </div>          {/* Details Section */}          <div style={{paddingBottom: '2.5rem',paddingTop: '2.5rem', paddingLeft:'1rem', paddingRight:'1rem'}} className="bg-gray-900 text-white rounded-lg shadow-lg">
+            <h1 style={{marginBottom: '2rem', wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'normal'}} className="text-3xl font-bold">{art.title}</h1><div style={{marginBottom: '1.5rem'}} className="flex justify-between items-center">
               <div className="flex items-center">
                 <div className="bg-gray-700 rounded-full h-10 w-10 flex items-center justify-center">
                   <span className="text-white font-medium">
                     {art.createdBy.username.charAt(0).toUpperCase()}
                   </span>
                 </div>
-                <span className="ml-2">@{art.createdBy.username}</span>
+                <span style={{marginLeft: '0.5rem'}}>@{art.createdBy.username}</span>
               </div>
               <div className="flex items-center">
                 <ClockIcon className="h-5 w-5 mr-1" />
                 <span>{formatDistanceToNow(new Date(art.createdAt), { addSuffix: true })}</span>
               </div>
-            </div>
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Prompt</h2>
-              <div className="bg-gray-700 p-4 rounded-lg">
+            </div>            <div style={{marginBottom: '1.5rem'}}>
+              <h2 style={{marginBottom: '0.5rem'}} className="text-xl font-semibold">Prompt</h2>
+              <div style={{padding: '1rem'}} className="bg-gray-700 rounded-lg">
                 <div className="flex items-start">
-                  <PencilIcon className="h-5 w-5 text-gray-400 mt-1 mr-2" />
+                  <PencilIcon style={{marginTop: '0.25rem', marginRight: '0.5rem'}} className="h-5 w-5 text-gray-400" />
                   <p>{art.prompt}</p>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-around py-4 mb-6 border-t border-b border-gray-600">
+            </div>            <div style={{padding: '1rem 0', marginBottom: '1.5rem', borderTop: '1px solid rgba(75, 85, 99, 1)', borderBottom: '1px solid rgba(75, 85, 99, 1)'}} className="flex justify-around">
               <div className="flex items-center">
                 <button onClick={handleLike} className="flex items-center">
                   {isLiked ? (
@@ -260,52 +253,47 @@ export default function ArtDetailPage({ params }: { params: Promise<{ slug: stri
                     <HeartIcon className="h-6 w-6 text-gray-400" />
                   )}
                 </button>
-                <span className="ml-1">{art.likesCount}</span>
-              </div>
-              <div className="flex items-center">
+                <span style={{marginLeft: '0.25rem'}}>{art.likesCount}</span>
+              </div>              <div className="flex items-center">
                 <ChatBubbleLeftIcon className="h-6 w-6 text-gray-400" />
-                <span className="ml-1">{art.commentsCount}</span>
+                <span style={{marginLeft: '0.25rem'}}>{art.commentsCount}</span>
               </div>
               <div className="flex items-center">
                 <EyeIcon className="h-6 w-6 text-gray-400" />
-                <span className="ml-1">{art.views}</span>
+                <span style={{marginLeft: '0.25rem'}}>{art.views}</span>
               </div>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Comments</h2>
+            </div>            <div>
+              <h2 style={{marginBottom: '1rem'}} className="text-xl font-semibold">Comments</h2>
               {isAuthenticated && (
-                <form onSubmit={handleSubmitComment} className="mb-6 flex">
-                  <input
+                <form onSubmit={handleSubmitComment} style={{marginBottom: '1.5rem'}} className="flex">                  <input
                     type="text"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Add a comment..."
-                    className="flex-1 border border-gray-600 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button
+                    style={{flex: 1, borderWidth: '1px', borderColor: 'rgba(75, 85, 99, 1)', borderTopLeftRadius: '0.5rem', borderBottomLeftRadius: '0.5rem', padding: '0.5rem 1rem'}}
+                    className="focus:outline-none focus:ring-2 focus:ring-primary"
+                  />                  <button
                     type="submit"
                     disabled={isSubmittingComment || !newComment.trim()}
-                    className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-dark transition-colors disabled:bg-gray-400"
+                    style={{padding: '0.5rem 1rem', borderTopRightRadius: '0.5rem', borderBottomRightRadius: '0.5rem'}}
+                    className="bg-primary text-white hover:bg-primary-dark transition-colors disabled:bg-gray-400"
                   >
                     Post
                   </button>
                 </form>
-              )}
-              <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+              )}              <div style={{gap: '1rem', maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem'}} className="space-y-4">
                 {art.comments && art.comments.length > 0 ? (
                   art.comments.map((comment) => (
-                    <div key={comment._id} className="bg-gray-700 p-4 rounded-lg">
+                    <div key={comment._id} style={{padding: '1rem'}} className="bg-gray-700 rounded-lg">
                       <div className="flex justify-between items-start">
-                        <div className="flex items-center">
-                          <div className="bg-gray-600 rounded-full h-8 w-8 flex items-center justify-center">
+                        <div className="flex items-center">                          <div className="bg-gray-600 rounded-full h-8 w-8 flex items-center justify-center">
                             <span className="text-white font-medium">
                               {comment.createdBy.username.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="ml-2 font-medium">@{comment.createdBy.username}</span>
+                          <span style={{marginLeft: '0.5rem'}} className="font-medium">@{comment.createdBy.username}</span>
                         </div>
-                        <div className="flex items-center">
-                          <span className="text-sm text-gray-400 mr-2">
+                        <div className="flex items-center">                          <span style={{marginRight: '0.5rem'}} className="text-sm text-gray-400">
                             {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                           </span>
                           {isAuthenticated && user && comment.createdBy._id === user.id && (
@@ -315,11 +303,11 @@ export default function ArtDetailPage({ params }: { params: Promise<{ slug: stri
                           )}
                         </div>
                       </div>
-                      <p className="mt-2 text-gray-300">{comment.text}</p>
+                      <p style={{marginTop: '0.5rem'}} className="text-gray-300">{comment.text}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400 text-center py-4">No comments yet. Be the first to comment!</p>
+                  <p style={{padding: '1rem 0'}} className="text-gray-400 text-center">No comments yet. Be the first to comment!</p>
                 )}
               </div>
             </div>
