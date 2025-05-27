@@ -31,12 +31,15 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     });    res.status(201).json({
       success: true,
       message: 'User registered successfully',
-      token, // Token'ı response'da dön
+      token,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        bio: user.bio || '',
+        profileImage: user.profileImage || '',
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -78,16 +81,17 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-
-    res.status(200).json({
+    });    res.status(200).json({
       success: true,
       token,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        bio: user.bio || '',
+        profileImage: user.profileImage || '',
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -108,15 +112,16 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
         message: 'User not found'
       });
       return;
-    }
-
-    res.status(200).json({
+    }    res.status(200).json({
       success: true,
       user: {
         id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        bio: user.bio || '',
+        profileImage: user.profileImage || '',
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

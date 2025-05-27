@@ -9,6 +9,7 @@ export interface IComment {
 
 export interface IArt extends Document {
   title: string;
+  slug: string;
   prompt: string;
   imageUrl: string;
   createdBy: mongoose.Schema.Types.ObjectId;
@@ -26,6 +27,11 @@ const ArtSchema = new Schema<IArt>(
       type: String,
       required: true,
       trim: true,
+    },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
     },
     prompt: {
       type: String,
@@ -71,10 +77,30 @@ const ArtSchema = new Schema<IArt>(
       type: Number,
       default: 0
     }
-  },
-  {
+  },  {
     timestamps: true,
   }
 );
+
+// Import and use slugify to generate slug from title
+import slugify from 'slugify';
+
+// Generate slug from title
+ArtSchema.pre('save', function(next) {
+  // Only generate slug if title has been modified or it's a new document
+  if (this.isModified('title') || this.isNew) {
+    // Generate base slug from title
+    let baseSlug = slugify(this.title, { 
+      lower: true,     // Convert to lowercase
+      strict: true,    // Strip special chars
+      trim: true       // Trim spaces
+    });
+    
+    // Add a random suffix to make slug unique
+    const randomSuffix = Math.floor(Math.random() * 10000).toString();
+    this.slug = `${baseSlug}-${randomSuffix}`;
+  }
+  next();
+});
 
 export default mongoose.model<IArt>('Art', ArtSchema);

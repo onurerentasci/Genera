@@ -54,10 +54,11 @@ router.get('/timeline', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch timeline' });  }
 });
 
-// Views
+// Views - artId can be either MongoDB ObjectId or slug
 router.post('/:artId/view', trackView);
 
 // Get art details (including comments, likes, and incrementing view count)
+// artId can be either MongoDB ObjectId or slug
 router.get('/:artId', getArtById);
 
 export default router;

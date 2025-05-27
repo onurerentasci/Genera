@@ -7,6 +7,10 @@ export interface IUser {
   email: string;
   password: string;
   role: 'user' | 'admin';
+  bio?: string;
+  profileImage?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
   generateAuthToken(): string;
 }
@@ -33,11 +37,19 @@ const UserSchema = new Schema<IUser>({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long'],
     select: false, // Don't include password in query results by default
-  },
-  role: {
+  },  role: {
     type: String,
     enum: ['user', 'admin'],
     default: 'user',
+  },
+  bio: {
+    type: String,
+    maxlength: [500, 'Bio cannot exceed 500 characters'],
+    default: '',
+  },
+  profileImage: {
+    type: String,
+    default: '',
   },
 }, {
   timestamps: true,

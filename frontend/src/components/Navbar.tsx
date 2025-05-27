@@ -33,7 +33,7 @@ export default function Navbar() {
   const navigationItems = [
     {
       name: 'Explore',
-      href: '/explore',
+      href: '/',
       icon: PhotoIcon,
       description: 'Discover artworks'
     },

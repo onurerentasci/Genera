@@ -10,6 +10,9 @@ interface User {
   username: string;
   email: string;
   role: 'user' | 'admin';
+  bio?: string;
+  profileImage?: string;
+  createdAt: string;
 }
 
 interface AuthContextType {
@@ -20,6 +23,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (username: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateUserProfile: (profileData: { bio?: string; profileImage?: string }) => Promise<boolean>;
   error: string | null;
 }
 
@@ -137,7 +141,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
   // Logout function
   const logout = async () => {
     try {
@@ -155,10 +158,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Logout failed:', err);
     }
   };
+  
+  // Update user profile
+  const updateUserProfile = async (profileData: { bio?: string; profileImage?: string }) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.put(
+        `/api/profile`,
+        profileData,
+        { withCredentials: true }
+      );
+      
+      if (response.data.success && user) {
+        // Update the user object with new profile data
+        setUser({
+          ...user,
+          bio: profileData.bio || user.bio,
+          profileImage: profileData.profileImage || user.profileImage
+        });
+      }
+      
+      return true;
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update profile');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <AuthContext.Provider
-      value={{
+    <AuthContext.Provider      value={{
         user,
         token,
         isAuthenticated: !!user,
@@ -166,6 +197,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        updateUserProfile,
         error
       }}
     >

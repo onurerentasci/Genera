@@ -185,19 +185,24 @@ export const addComment = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// Get art by ID with details (including comments, likes, views)
+// Get art by ID or slug with details (including comments, likes, views)
 export const getArtById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { artId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(artId)) {
-      res.status(400).json({ success: false, message: 'Invalid art ID' });
-      return;
+    
+    let query;
+    
+    // Check if it's a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(artId)) {
+      query = { _id: artId };
+    } else {
+      // Otherwise, treat it as a slug
+      query = { slug: artId };
     }
 
     // Find art and increment view count
-    const art = await Art.findByIdAndUpdate(
-      artId, 
+    const art = await Art.findOneAndUpdate(
+      query, 
       { $inc: { views: 1 } },
       { new: true }
     )
@@ -224,10 +229,15 @@ export const getArtById = async (req: Request, res: Response): Promise<void> => 
 export const trackView = async (req: Request, res: Response): Promise<void> => {
   try {
     const { artId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(artId)) {
-      res.status(400).json({ success: false, message: 'Invalid art ID' });
-      return;
+    
+    let query;
+    
+    // Check if it's a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(artId)) {
+      query = { _id: artId };
+    } else {
+      // Otherwise, treat it as a slug
+      query = { slug: artId };
     }
 
     // Increment view count

@@ -8,6 +8,8 @@ import mongoose from 'mongoose';
 // Routes imports
 import authRoutes from './routes/auth.routes';
 import artRoutes from './routes/art.routes';
+import userRoutes from './routes/user.routes';
+import profileRoutes from './routes/profile.routes';
 
 // Initialize environment variables
 dotenv.config();
@@ -38,6 +40,8 @@ app.use(session({
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/art', artRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
