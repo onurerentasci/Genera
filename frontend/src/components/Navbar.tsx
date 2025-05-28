@@ -29,8 +29,8 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const navigationItems = [
+  // Base navigation items
+  const baseNavigationItems = [
     {
       name: 'Explore',
       href: '/',
@@ -44,6 +44,19 @@ export default function Navbar() {
       description: 'Latest updates'
     }
   ];
+  
+  // Add admin link if user is an admin
+  const navigationItems = user?.role === 'admin' 
+    ? [
+        ...baseNavigationItems,
+        {
+          name: 'Admin',
+          href: '/admin',
+          icon: SparklesIcon,
+          description: 'Manage content'
+        }
+      ] 
+    : baseNavigationItems;
 
   return (
     <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
@@ -88,10 +101,9 @@ export default function Navbar() {
                 >
                   <div className="user-avatar">
                     <UserCircleIcon className="w-6 h-6" />
-                  </div>
-                  <div className="user-info">
+                  </div>                  <div className="user-info">
                     <span className="username">{user?.username}</span>
-                    <span className="user-role">Creator</span>
+                    <span className="user-role">{user?.role === 'admin' ? 'Admin' : 'Creator'}</span>
                   </div>
                   <ChevronDownIcon className={`chevron ${userMenuOpen ? 'rotated' : ''}`} />
                 </button>

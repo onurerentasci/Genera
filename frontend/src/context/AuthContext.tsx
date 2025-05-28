@@ -54,6 +54,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // Set up axios interceptor to include token in every request
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+    
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, [token]);
+
   // Fetch current user data with token
   const fetchCurrentUser = async (authToken: string) => {
     try {

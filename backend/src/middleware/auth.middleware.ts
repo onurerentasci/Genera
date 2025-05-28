@@ -23,6 +23,9 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
       token = req.cookies.token;
     }
 
+    console.log('Auth check - Token found:', !!token);
+    console.log('Auth headers:', req.headers.authorization);
+    
     if (!token) {
       res.status(401).json({ success: false, message: 'No token provided' });
       return;
@@ -46,9 +49,14 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
 
 // Check if user is admin
 export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  console.log('isAdmin check - User:', req.user);
+  console.log('isAdmin check - User role:', req.user?.role);
+  
   if (req.user && req.user.role === 'admin') {
+    console.log('Admin access granted');
     next();
   } else {
+    console.log('Admin access denied');
     res.status(403).json({
       success: false,
       message: 'Access denied: Admin role required'

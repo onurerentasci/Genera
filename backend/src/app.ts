@@ -10,6 +10,8 @@ import authRoutes from './routes/auth.routes';
 import artRoutes from './routes/art.routes';
 import userRoutes from './routes/user.routes';
 import profileRoutes from './routes/profile.routes';
+import newsRoutes from './routes/news.routes';
+import debugRoutes from './routes/debug.routes';
 
 // Initialize environment variables
 dotenv.config();
@@ -42,6 +44,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/art', artRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/admin/news', newsRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
