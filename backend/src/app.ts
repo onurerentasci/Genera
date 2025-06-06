@@ -11,6 +11,8 @@ import artRoutes from './routes/art.routes';
 import userRoutes from './routes/user.routes';
 import profileRoutes from './routes/profile.routes';
 import newsRoutes from './routes/news.routes';
+import adminArtsRoutes from './routes/admin-arts.routes';
+import adminUsersRoutes from './routes/admin-users.routes';
 import debugRoutes from './routes/debug.routes';
 
 // Initialize environment variables
@@ -24,8 +26,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie']
 }));
 
 // Session configuration
@@ -44,7 +54,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/art', artRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/admin/news', newsRoutes);
+app.use('/api/news', newsRoutes);
+app.use('/api/admin/news', newsRoutes); // Admin news route
+app.use('/api/admin/arts', adminArtsRoutes);
+app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/debug', debugRoutes);
 
 // Health check route

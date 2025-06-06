@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import { ClockIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import './styles.css';
 
 interface News {
   _id: string;
@@ -57,9 +58,8 @@ export default function NewsPage() {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
   };
-
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
+    <div className="min-h-screen news-page-container" style={{ background: 'var(--color-background)' }}>
       <Navbar />
       
       <div className="container mx-auto px-4 py-8" style={{ maxWidth: '900px' }}>

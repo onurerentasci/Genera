@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import AdminLayout from '@/components/AdminLayout';
 import Link from 'next/link';
+import './styles.css';
 import { 
   PlusIcon, 
   PencilIcon, 
@@ -299,19 +300,11 @@ export default function AdminNewsPage() {
           )}
         </div>
       )}
-      
-      {/* Create News Button */}
+        {/* Create News Button */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 mb-6 rounded-md transition-all duration-300"
-          style={{
-            background: 'var(--color-primary)',
-            color: 'white',
-            boxShadow: 'var(--shadow-md)'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+          className="create-news-btn"
         >
           <PlusIcon className="h-5 w-5" />
           Create News

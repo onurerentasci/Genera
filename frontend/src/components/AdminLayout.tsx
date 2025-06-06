@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import Navbar from '@/components/Navbar';
+import '../app/admin/styles.css';
 import { 
   NewspaperIcon, 
   UsersIcon, 
@@ -100,9 +101,8 @@ export default function AdminLayout({ children, title, description }: AdminLayou
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
+    <div className="admin-page-container min-h-screen" style={{ background: 'var(--color-background)' }}>
       <Navbar />
       
       <div className="admin-container" style={{

@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import { ClockIcon, UserCircleIcon, ArrowLeftIcon, ShareIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import '../styles.css';
 
 interface News {
   _id: string;
@@ -64,7 +65,7 @@ export default function NewsDetailPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
+    <div className="min-h-screen news-page-container" style={{ background: 'var(--color-background)' }}>
       <Navbar />
       
       <div className="container mx-auto px-4 py-8" style={{ maxWidth: '800px' }}>
