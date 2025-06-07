@@ -30,7 +30,7 @@ const ArtSchema = new Schema<IArt>(
       trim: true,
     },    slug: {
       type: String,
-      required: false, // Temporarily disable to test hook execution
+      required: false, 
       unique: true,
     },
     prompt: {

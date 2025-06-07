@@ -20,10 +20,10 @@ export default function GeneratePage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Form states
+    // Form states
   const [prompt, setPrompt] = useState('');
   const [customTitle, setCustomTitle] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState<'realistic' | 'artistic' | 'anime' | 'abstract' | null>(null);
   
   // Generation states
   const [generatedArt, setGeneratedArt] = useState<{ imageUrl: string; title: string } | null>(null);
@@ -37,19 +37,46 @@ export default function GeneratePage() {
   
   // UI states
   const [activeTab, setActiveTab] = useState<'create' | 'preview'>('create');
-  
-  // Example prompts for inspiration
+    // Example prompts for inspiration
   const examplePrompts = [
     "A surreal landscape with floating islands and a purple sky",
     "A cyberpunk cityscape with neon lights and flying cars",
     "A magical forest with glowing mushrooms and fairy creatures",
     "An underwater ancient temple with mermaids and colorful fish"
   ];
-  useEffect(() => {
-    // Reset states on initial render
+
+  // Style options
+  const styleOptions = [
+    { 
+      id: 'realistic', 
+      name: 'Realistic', 
+      description: 'Photorealistic, high detail',
+      emoji: '📸'
+    },
+    { 
+      id: 'artistic', 
+      name: 'Artistic', 
+      description: 'Painted, fine art style',
+      emoji: '🎨'
+    },
+    { 
+      id: 'anime', 
+      name: 'Anime', 
+      description: 'Anime and manga style',
+      emoji: '🌸'
+    },
+    { 
+      id: 'abstract', 
+      name: 'Abstract', 
+      description: 'Modern abstract art',
+      emoji: '🎭'
+    }
+  ];
+  useEffect(() => {    // Reset states on initial render
     setGeneratedArt(null);
     setPrompt('');
     setCustomTitle('');
+    setSelectedStyle(null);
     setSaveSuccess(false);
     setGenerationError(null);
     setSaveError(null);
@@ -82,11 +109,15 @@ export default function GeneratePage() {
     
     setGenerationError(null);
     setIsGenerating(true);
-    
-    try {
+      try {
+      const requestData: any = { prompt: prompt.trim() };
+      if (selectedStyle) {
+        requestData.style = selectedStyle;
+      }
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/art/generate`, 
-        { prompt: prompt.trim() }, 
+        requestData, 
         { withCredentials: true }
       );
       
@@ -94,6 +125,11 @@ export default function GeneratePage() {
         imageUrl: response.data.imageUrl, 
         title: 'Generated Art' 
       });
+      
+      // Show warning if fallback was used
+      if (response.data.warning) {
+        setGenerationError(response.data.warning);
+      }
       
       // Generate a title based on the prompt
       setCustomTitle(`Art from: ${prompt.slice(0, 30)}${prompt.length > 30 ? '...' : ''}`);
@@ -141,10 +177,10 @@ export default function GeneratePage() {
       setIsSaving(false);
     }
   };
-
   const handleNewCreation = () => {
     setGeneratedArt(null);
     setCustomTitle('');
+    setSelectedStyle(null);
     setSaveSuccess(false);
     setGenerationError(null);
     setSaveError(null);
@@ -207,8 +243,7 @@ export default function GeneratePage() {
             {/* Create Section */}
             <div className={`create-section ${activeTab === 'create' ? 'active' : ''}`}>
               <div className="prompt-container">
-                <h2 className="prompt-heading">Enter your creative prompt</h2>
-                <textarea
+                <h2 className="prompt-heading">Enter your creative prompt</h2>                <textarea
                   ref={promptInputRef}
                   className="prompt-input"
                   value={prompt}
@@ -216,6 +251,24 @@ export default function GeneratePage() {
                   placeholder="Describe your vision in detail..."
                   rows={4}
                 />
+                
+                {/* Style Selection */}
+                <div className="style-selection">
+                  <h3 className="style-heading">Choose an art style (optional)</h3>
+                  <div className="style-grid">
+                    {styleOptions.map((style) => (
+                      <button
+                        key={style.id}
+                        onClick={() => setSelectedStyle(selectedStyle === style.id ? null : style.id as any)}
+                        className={`style-option ${selectedStyle === style.id ? 'selected' : ''}`}
+                      >
+                        <span className="style-emoji">{style.emoji}</span>
+                        <span className="style-name">{style.name}</span>
+                        <span className="style-description">{style.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 
                 {/* Example Prompts */}
                 <div className="example-prompts">

@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import path from 'path';
 
 // CSRF Protection
 import csrfProtection, { provideCsrfToken, getCsrfToken, conditionalCsrfProtection } from './middleware/csrf.middleware';
@@ -61,6 +62,9 @@ app.use(provideCsrfToken);
 
 // CSRF token endpoint - needs to be before other routes
 app.get('/api/csrf-token', getCsrfToken);
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);

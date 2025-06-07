@@ -1,19 +1,70 @@
 import { Request, Response } from 'express';
 import Art from '../models/Art';
 import mongoose from 'mongoose';
+import HuggingFaceService from '../services/huggingface.service';
 
-// Generate art (mock implementation)
+// Generate art using Hugging Face Stable Diffusion
 export const generateArt = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { prompt } = req.body;
+    const { prompt, style } = req.body;
 
-    // Generate a dynamic image URL based on the prompt
-    const mockImageUrl = `https://placehold.co/600x400.png?text=${encodeURIComponent(prompt)}`;
+    if (!prompt || prompt.trim() === '') {
+      res.status(400).json({ success: false, message: 'Prompt is required' });
+      return;
+    }    console.log('Generating image for prompt:', prompt, 'with style:', style);
 
-    res.status(200).json({ success: true, imageUrl: mockImageUrl });
-  } catch (error) {
+    try {
+      // Create Hugging Face service instance
+      const huggingFaceService = new HuggingFaceService();
+      
+      // Generate image using Hugging Face service
+      const filename = style 
+        ? await huggingFaceService.generateImageWithStyle(prompt, style)
+        : await huggingFaceService.generateImage(prompt);
+      
+      // Create public URL for the image
+      const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+      
+      console.log('Image generated successfully:', imageUrl);
+      
+      res.status(200).json({ 
+        success: true, 
+        imageUrl: imageUrl,
+        message: 'Image generated successfully using AI'
+      });
+    } catch (hfError: any) {
+      console.error('Hugging Face generation error:', hfError.message);
+      
+      // Provide more specific error messages to the user
+      let errorMessage = 'AI generation temporarily unavailable';
+      if (hfError.message.includes('quota')) {
+        errorMessage = 'AI service quota exceeded. Please try again later.';
+      } else if (hfError.message.includes('loading')) {
+        errorMessage = 'AI model is loading. Please try again in a few moments.';
+      }
+      
+      // Fallback to placeholder if HF fails
+      const fallbackImageUrl = `https://placehold.co/512x512/6366f1/ffffff.png?text=${encodeURIComponent(prompt)}`;
+      res.status(200).json({ 
+        success: true, 
+        imageUrl: fallbackImageUrl,
+        message: 'Generated using fallback service',
+        warning: errorMessage
+      });
+    }
+  } catch (error: any) {
     console.error('Error generating art:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate art' });
+    
+    // Final fallback
+    const { prompt } = req.body;
+    const fallbackImageUrl = `https://placehold.co/512x512/6366f1/ffffff.png?text=${encodeURIComponent(prompt || 'Art')}`;
+    
+    res.status(200).json({ 
+      success: true, 
+      imageUrl: fallbackImageUrl,
+      message: 'Generated using fallback service',
+      warning: 'AI generation temporarily unavailable'
+    });
   }
 };
 
