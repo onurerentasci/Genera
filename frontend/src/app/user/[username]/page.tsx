@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
+import ImageGalleryModal from '@/components/ImageGalleryModal';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -46,8 +47,7 @@ interface Art {
 
 export default function UserProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
-  const { user: currentUser, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const { user: currentUser, isAuthenticated } = useAuth();  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [galleryArts, setGalleryArts] = useState<Art[]>([]);
   const [likedArts, setLikedArts] = useState<Art[]>([]);
@@ -58,6 +58,22 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
   const [likedPage, setLikedPage] = useState(1);
   const [galleryHasMore, setGalleryHasMore] = useState(true);
   const [likedHasMore, setLikedHasMore] = useState(true);
+  
+  // Gallery modal states
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [modalImages, setModalImages] = useState<Art[]>([]);
+  const [modalInitialIndex, setModalInitialIndex] = useState(0);
+
+  // Open gallery modal
+  const openGalleryModal = (images: Art[], initialIndex: number) => {
+    setModalImages(images);
+    setModalInitialIndex(initialIndex);
+    setIsGalleryModalOpen(true);
+  };
+
+  const closeGalleryModal = () => {
+    setIsGalleryModalOpen(false);
+  };
 
   // Fetch user profile
   useEffect(() => {
@@ -446,12 +462,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                   gap: 'var(--spacing-lg)',
                   margin: '0 auto',
                   justifyContent: 'center'
-                }}>
-                  {galleryArts.map((art) => (
-                    <Link
-                      href={`/art/${art.slug || art._id}`}
+                }}>                  {galleryArts.map((art, index) => (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openGalleryModal(galleryArts, index);
+                      }}
                       key={art._id}
-                      className="gallery-item group"
+                      className="gallery-item group cursor-pointer border-none bg-transparent p-0"
                     >
                       <div className="relative aspect-square overflow-hidden" style={{
                         borderRadius: 'var(--radius-lg)',
@@ -483,7 +501,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                           </div>
                         </div>
                       </div>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
@@ -552,19 +570,21 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                       Explore Artworks
                     </Link>
                   )}
-                </div>              ) : (
-                <div className="gallery-grid w-full" style={{
+                </div>              ) : (                <div className="gallery-grid w-full" style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                   gap: 'var(--spacing-lg)',
                   margin: '0 auto',
                   justifyContent: 'center'
                 }}>
-                  {likedArts.map((art) => (
-                    <Link
-                      href={`/art/${art.slug || art._id}`}
+                  {likedArts.map((art, index) => (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        openGalleryModal(likedArts, index);
+                      }}
                       key={art._id}
-                      className="gallery-item group"
+                      className="gallery-item group cursor-pointer border-none bg-transparent p-0"
                     >
                       <div className="relative aspect-square overflow-hidden" style={{
                         borderRadius: 'var(--radius-lg)',
@@ -587,7 +607,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                           </p>
                         </div>
                       </div>
-                    </Link>
+                    </button>
                   ))}
                 </div>
               )}
@@ -619,10 +639,17 @@ export default function UserProfilePage({ params }: { params: Promise<{ username
                   </button>
                 </div>
               )}
-            </Tab.Panel>
-          </Tab.Panels>
+            </Tab.Panel>          </Tab.Panels>
         </Tab.Group>
       </div>
+
+      {/* Gallery Modal */}
+      <ImageGalleryModal
+        isOpen={isGalleryModalOpen}
+        images={modalImages}
+        initialIndex={modalInitialIndex}
+        onClose={closeGalleryModal}
+      />
     </div>
   );
 }

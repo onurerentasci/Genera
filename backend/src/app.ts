@@ -5,6 +5,9 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
+// CSRF Protection
+import csrfProtection, { provideCsrfToken, getCsrfToken, conditionalCsrfProtection } from './middleware/csrf.middleware';
+
 // Routes imports
 import authRoutes from './routes/auth.routes';
 import artRoutes from './routes/art.routes';
@@ -15,6 +18,7 @@ import adminArtsRoutes from './routes/admin-arts.routes';
 import adminUsersRoutes from './routes/admin-users.routes';
 import debugRoutes from './routes/debug.routes';
 import statsRoutes from './routes/stats.routes';
+import testRoutes from './routes/test.routes';
 
 // Initialize environment variables
 dotenv.config();
@@ -35,7 +39,7 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-CSRF-Token', 'CSRF-Token', 'X-XSRF-Token'],
   exposedHeaders: ['Set-Cookie']
 }));
 
@@ -50,6 +54,14 @@ app.use(session({
   }
 }));
 
+// CSRF Protection - Apply conditionally to skip public endpoints
+// Temporarily disabled for debugging
+// app.use(conditionalCsrfProtection);
+app.use(provideCsrfToken);
+
+// CSRF token endpoint - needs to be before other routes
+app.get('/api/csrf-token', getCsrfToken);
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/art', artRoutes);
@@ -61,6 +73,7 @@ app.use('/api/admin/arts', adminArtsRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/test', testRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

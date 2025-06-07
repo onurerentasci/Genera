@@ -15,33 +15,38 @@ declare global {
 }
 
 // Verify JWT token middleware
-export const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
+export const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {  try {
     let token;
-
+    console.log('Auth middleware: Headers authorization:', req.headers.authorization);
+    console.log('Auth middleware: Cookies:', req.cookies);
+    
     // Get token from header or cookies
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
+      console.log('Auth middleware: Token from Authorization header');
     } else if (req.cookies.token) {
       token = req.cookies.token;
+      console.log('Auth middleware: Token from cookies');
     }
-
-    console.log('Auth check - Token found:', !!token);
-    console.log('Auth headers:', req.headers.authorization);
     
     if (!token) {
+      console.log('Auth middleware: No token provided');
       res.status(401).json({ success: false, message: 'No token provided' });
       return;
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt-secret');
+    const jwtSecret = process.env.JWT_SECRET || 'genera-jwt-secret-key-change-in-production';
+    console.log('Verifying token with secret:', jwtSecret.substring(0, 10) + '...');
+    const decoded = jwt.verify(token, jwtSecret);
 
     // Ensure decoded token is an object and contains the expected properties
     if (typeof decoded === 'object' && 'id' in decoded) {
+      console.log('Auth middleware: Token verified successfully for user:', decoded.id);
       req.user = decoded;
       next();
     } else {
+      console.log('Auth middleware: Invalid token structure');
       res.status(401).json({ success: false, message: 'Invalid token' });
     }
   } catch (error) {

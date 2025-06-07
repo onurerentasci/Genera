@@ -20,20 +20,61 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
 // Submit art
 export const submitArt = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log("Backend: submitArt called with body:", req.body);
+    console.log("Backend: User from token:", req.user);
+    
     const { title, prompt, imageUrl } = req.body;
     const userId = req.user.id;
 
-    const newArt = await Art.create({
+    if (!title || !prompt || !imageUrl) {
+      console.log("Backend: Missing required fields:", { title, prompt, imageUrl });
+      res.status(400).json({ success: false, message: 'Title, prompt, and imageUrl are required' });
+      return;
+    }    console.log("Backend: Creating new art with data:", { title, prompt, imageUrl, userId });
+
+    console.log("🚨 Backend: About to create new Art document...");
+    // Create new art document using new + save pattern to ensure pre-save hooks run
+    const newArt = new Art({
       title,
       prompt,
       imageUrl,
       createdBy: userId,
     });
 
-    res.status(201).json({ success: true, art: newArt });
-  } catch (error) {
-    console.error('Error submitting art:', error);
-    res.status(500).json({ success: false, message: 'Failed to submit art' });
+    console.log("🚨 Backend: About to call save()...");
+    // Save the document (this will trigger the pre-save hook)
+    const savedArt = await newArt.save();
+
+    console.log("🚨 Backend: Art.save() completed successfully!");
+    console.log("🚨 Backend: Saved art:", JSON.stringify(savedArt, null, 2));
+
+    console.log("Backend: Art created successfully:", savedArt);
+    res.status(201).json({ success: true, art: savedArt });
+  } catch (error: any) {
+    console.error('Backend: Error submitting art:', error);
+    
+    // Provide more detailed error information
+    if (error.name === 'ValidationError') {
+      console.error('Backend: Validation error details:', error.errors);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Validation failed', 
+        details: error.errors 
+      });
+    } else if (error.code === 11000) {
+      console.error('Backend: Duplicate key error:', error.keyPattern);
+      res.status(400).json({ 
+        success: false, 
+        message: 'Duplicate entry', 
+        details: error.keyPattern 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to submit art',
+        error: error.message 
+      });
+    }
   }
 };
 

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { StatsProvider } from "@/context/StatsContext";
+import { CsrfProvider } from "@/context/CsrfContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,17 +26,19 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
-  return (
+}>) {  return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning // Suppresses hydration warnings for class mismatches
-      >        <AuthProvider>
-          <StatsProvider>
-            {children}
-          </StatsProvider>
-        </AuthProvider>
+      >
+        <CsrfProvider>
+          <AuthProvider>
+            <StatsProvider>
+              {children}
+            </StatsProvider>
+          </AuthProvider>
+        </CsrfProvider>
       </body>
     </html>
   );

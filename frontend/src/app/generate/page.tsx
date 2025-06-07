@@ -103,9 +103,7 @@ export default function GeneratePage() {
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleSave = async () => {
+  };  const handleSave = async () => {
     if (!generatedArt || !prompt || !customTitle) {
       setSaveError('Please generate art and add a title before saving');
       return;
@@ -115,16 +113,23 @@ export default function GeneratePage() {
     setIsSaving(true);
     
     try {
+      console.log('Saving art with data:', {
+        title: customTitle,
+        prompt: prompt,
+        imageUrl: generatedArt.imageUrl,
+      });
+      
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/art/submit`,
+        '/api/art/submit',
         {
           title: customTitle,
           prompt: prompt,
           imageUrl: generatedArt.imageUrl,
         },
-        { withCredentials: true }
+        { withCredentials: true } // Add credentials
       );
       
+      console.log('Art saved successfully:', response.data);
       setSaveSuccess(true);
       setTimeout(() => {
         router.push('/'); // Redirect to home page after successful save

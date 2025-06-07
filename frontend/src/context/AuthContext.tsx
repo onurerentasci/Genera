@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useCsrf } from './CsrfContext';
 
 // Types
 interface User {
@@ -37,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { getCsrfToken } = useCsrf();
 
   // Check if user is already logged in (on initial load)
   useEffect(() => {
@@ -100,16 +102,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-  // Login function
+  };  // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Get CSRF token before making the request
+      const csrfToken = await getCsrfToken();
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
         { email, password },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers: {
+            'X-CSRF-Token': csrfToken
+          }
+        }
       );
       
       const userData = response.data.user;
@@ -135,10 +144,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Get CSRF token before making the request
+      const csrfToken = await getCsrfToken();
+      
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`,
         { username, email, password },
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers: {
+            'X-CSRF-Token': csrfToken
+          }
+        }
       );
       
       const userData = response.data.user;
@@ -159,11 +176,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
-  // Logout function
+  };  // Logout function
   const logout = async () => {
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {}, { withCredentials: true });
+      // Get CSRF token before making the request
+      const csrfToken = await getCsrfToken();
+      
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, 
+        {}, 
+        { 
+          withCredentials: true,
+          headers: {
+            'X-CSRF-Token': csrfToken
+          }
+        }
+      );
       
       // Kullanıcı verilerini temizle
       setUser(null);
@@ -177,16 +205,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Logout failed:', err);
     }
   };
-  
-  // Update user profile
+    // Update user profile
   const updateUserProfile = async (profileData: { bio?: string; profileImage?: string }) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Get CSRF token before making the request
+      const csrfToken = await getCsrfToken();
+      
       const response = await axios.put(
         `/api/profile`,
         profileData,
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          headers: {
+            'X-CSRF-Token': csrfToken
+          }
+        }
       );
       
       if (response.data.success && user) {
