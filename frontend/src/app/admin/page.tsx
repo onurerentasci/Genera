@@ -295,12 +295,11 @@ export default function AdminNewsPage() {
               >
                 <ArrowLeftIcon className="h-4 w-4" />
                 <span>Return to Home</span>
-              </Link>
-            </div>
-          )}
+              </Link>            </div>          )}
         </div>
       )}
-        {/* Create News Button */}
+        
+      {/* Create News Button */}
       {!showForm && (
         <button
           onClick={() => setShowForm(true)}

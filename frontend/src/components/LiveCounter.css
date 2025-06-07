@@ -1,0 +1,243 @@
+/* LiveCounter Styles */
+.live-counter {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.live-counter.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Position variants */
+.live-counter.top-left {
+  top: 80px;
+  left: 20px;
+}
+
+.live-counter.top-right {
+  top: 80px;
+  right: 20px;
+}
+
+.live-counter.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.live-counter.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Content */
+.live-counter-content {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.counter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.counter-item:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  padding-right: 16px;
+}
+
+/* Online indicator */
+.counter-indicator {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  position: relative;
+}
+
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: #22c55e;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+/* Visitor icon */
+.counter-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Counter info */
+.counter-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.counter-number {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: white;
+}
+
+.counter-label {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+/* Hover effects */
+.live-counter:hover .live-counter-content {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .live-counter {
+    bottom: 80px !important;
+    right: 10px !important;
+    left: auto !important;
+    top: auto !important;
+  }
+  
+  .live-counter-content {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  
+  .counter-item:not(:last-child) {
+    padding-right: 12px;
+  }
+  
+  .counter-number {
+    font-size: 13px;
+  }
+  
+  .counter-label {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .live-counter-content {
+    padding: 8px 10px;
+    gap: 10px;
+  }
+  
+  .counter-item:not(:last-child) {
+    padding-right: 10px;
+  }
+  
+  .counter-number {
+    font-size: 12px;
+  }
+}
+
+/* Compact version */
+.live-counter.compact .live-counter-content {
+  padding: 8px 12px;
+  gap: 12px;
+}
+
+.live-counter.compact .counter-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.live-counter.compact .counter-number {
+  font-size: 12px;
+}
+
+.live-counter.compact .counter-label {
+  font-size: 9px;
+}
+
+/* Animation delays for staggered entrance */
+.live-counter .counter-item:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.live-counter .counter-item:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+/* Glassmorphism variant */
+.live-counter.glass .live-counter-content {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.live-counter.glass .counter-item {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Dark theme variant */
+.live-counter.dark .live-counter-content {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+/* Light theme variant */
+.live-counter.light .live-counter-content {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+}
+
+.live-counter.light .counter-item {
+  color: #1f2937;
+}
+
+.live-counter.light .counter-label {
+  opacity: 0.6;
+}

@@ -7,6 +7,7 @@ import ArtCard from "@/components/ArtCard";
 import axios from "axios";
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import LiveCounter from '@/components/LiveCounter';
 import './fullPageLoader.css';
 
 interface Art {
@@ -228,9 +229,11 @@ export default function Home() {
         {!hasMore && arts.length > 0 && (
           <div className="end-message">
             <p>You've reached the end of your timeline ✨</p>
-          </div>
-        )}
+          </div>        )}
       </main>
+      
+      {/* Live Counter - sadece authenticated kullanıcılar için */}
+      {isAuthenticated && <LiveCounter position="bottom-right" />}
     </div>
   );
 }

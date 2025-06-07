@@ -357,35 +357,7 @@
 }
 
 .admin-page-container .admin-pagination .page-info {
-  padding: 0 1rem !important;
-  font-size: 0.875rem !important;
-}
-
-/* Stats Cards */
-.admin-page-container .admin-stats {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
-  gap: 1rem !important;
-  margin-bottom: 2rem !important;
-}
-
-.admin-page-container .admin-stat-card {
-  padding: 1.5rem !important;
-  border-radius: 0.5rem !important;
-  border: 1px solid var(--color-border) !important;
-  background: var(--color-surface) !important;
-  text-align: center !important;
-}
-
-.admin-page-container .admin-stat-card h3 {
-  font-size: 2rem !important;
-  font-weight: 700 !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.admin-page-container .admin-stat-card p {
-  font-size: 0.875rem !important;
-  margin-bottom: 0 !important;
+  padding: 0 1rem !important;  font-size: 0.875rem !important;
 }
 
 /* Loading States */
@@ -590,13 +562,8 @@
   .admin-page-container .admin-container {
     max-width: 1400px !important;
   }
-  
-  .admin-page-container .admin-header h1 {
+    .admin-page-container .admin-header h1 {
     font-size: 2rem !important;
-  }
-  
-  .admin-page-container .admin-stats {
-    grid-template-columns: repeat(4, 1fr) !important;
   }
 }
 

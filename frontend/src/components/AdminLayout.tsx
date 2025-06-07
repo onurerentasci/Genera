@@ -12,7 +12,8 @@ import {
   PhotoIcon,
   CogIcon,
   ChevronLeftIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 interface AdminLayoutProps {
@@ -24,7 +25,6 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, title, description }: AdminLayoutProps) {
   const { isLoading, error, isAdmin } = useAdminCheck();
   const router = useRouter();
-
   // Admin menu items
   const menuItems = [
     {
@@ -33,6 +33,13 @@ export default function AdminLayout({ children, title, description }: AdminLayou
       icon: NewspaperIcon,
       description: 'Manage news and announcements',
       active: title === 'News Management'
+    },
+    {
+      name: 'Analytics',
+      href: '/admin/analytics',
+      icon: ChartBarIcon,
+      description: 'View site statistics and analytics',
+      active: title === 'Site Analytics'
     },
     {
       name: 'Arts',

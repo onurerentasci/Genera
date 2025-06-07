@@ -1,6 +1,8 @@
 import app from './app';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import SocketService from './services/socket.service';
 
 // Load environment variables
 dotenv.config();
@@ -22,8 +24,16 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   await connectDB();
   
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  // Create HTTP server
+  const server = createServer(app);
+  
+  // Initialize Socket.IO
+  const socketService = new SocketService(server);
+  console.log('✅ Socket.IO initialized');
+  
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Online users tracking enabled`);
   });
 };
 

@@ -14,6 +14,7 @@ import newsRoutes from './routes/news.routes';
 import adminArtsRoutes from './routes/admin-arts.routes';
 import adminUsersRoutes from './routes/admin-users.routes';
 import debugRoutes from './routes/debug.routes';
+import statsRoutes from './routes/stats.routes';
 
 // Initialize environment variables
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/api/admin/news', newsRoutes); // Admin news route
 app.use('/api/admin/arts', adminArtsRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

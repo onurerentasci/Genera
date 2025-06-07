@@ -8,6 +8,9 @@ declare global {
     interface Request {
       user?: any;
     }
+    interface Session {
+      visited?: boolean;
+    }
   }
 }
 
