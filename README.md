@@ -1,5 +1,3 @@
-# What is Genera?
-
 **Genera**, kullanıcıların yapay zekâ destekli generatif görseller oluşturabildiği ve bu görselleri sosyal medya ortamında paylaşabildiği bir web uygulamasıdır. Metin tabanlı promptlar kullanılarak görsel üretimi yapılmakta ve bu içerikler, zaman akışı (timeline) üzerinden diğer kullanıcılarla etkileşime açılmaktadır. Kullanıcılar birbirlerinin eserlerini beğenebilir, yorumlayabilir ve kendi profil sayfalarında kişisel galerilerini oluşturabilirler.
 
 ---
@@ -61,7 +59,6 @@
 | Gereklilik               | Karşılanma Durumu |
 |--------------------------|-------------------|
 | Node.js tabanlı backend  | ✅                |
-| Site haritası (Sitemap)  | ✅                |
 | Ziyaretçi sayacı         | ✅                |
 | Online kullanıcı sayısı  | ✅                |
 | Duyuru / haber modülü    | ✅                |
