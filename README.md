@@ -2,6 +2,19 @@
 
 ---
 
+## 🖼️ Ekran Görüntüleri
+
+### Profil Sayfası (Beğenilenler Sekmesi)
+![Profil - Beğenilenler](screenshots/profile-liked.png)
+
+### Ana Sayfa (Timeline)
+![Ana Sayfa - Timeline](screenshots/timeline.png)
+
+### Görsel Oluşturma ve Kaydetme
+![Görsel Oluşturma](screenshots/create-artwork.png)
+
+---
+
 ## 🚀 Özellikler
 
 - 🎨 **Prompt ile Görsel Üretimi**  
