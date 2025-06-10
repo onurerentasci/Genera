@@ -5,13 +5,13 @@
 ## 🖼️ Ekran Görüntüleri
 
 ### Profil Sayfası (Beğenilenler Sekmesi)
-![Profil - Beğenilenler](screenshots/profile-liked.png)
+![Profil - Beğenilenler](https://raw.githubusercontent.com/onurerentasci/Genera/refs/heads/main/images/profile.png)
 
 ### Ana Sayfa (Timeline)
-![Ana Sayfa - Timeline](screenshots/timeline.png)
+![Ana Sayfa - Timeline](https://raw.githubusercontent.com/onurerentasci/Genera/refs/heads/main/images/explore.png)
 
 ### Görsel Oluşturma ve Kaydetme
-![Görsel Oluşturma](screenshots/create-artwork.png)
+![Görsel Oluşturma](https://raw.githubusercontent.com/onurerentasci/Genera/refs/heads/main/images/create.png)
 
 ---
 
