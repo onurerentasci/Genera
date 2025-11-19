@@ -1,6 +1,7 @@
 import mongoose, { Schema, HydratedDocument } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import { config } from '../config/env.config';
 
 export interface IUser {
   username: string;
@@ -37,7 +38,8 @@ const UserSchema = new Schema<IUser>({
     required: [true, 'Password is required'],
     minlength: [6, 'Password must be at least 6 characters long'],
     select: false, // Don't include password in query results by default
-  },  role: {
+  },
+  role: {
     type: String,
     enum: ['user', 'admin'],
     default: 'user',
@@ -55,6 +57,12 @@ const UserSchema = new Schema<IUser>({
   timestamps: true,
 });
 
+// Indexes for better query performance
+UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ username: 1 }, { unique: true });
+UserSchema.index({ role: 1 });
+UserSchema.index({ createdAt: -1 });
+
 // Hash password before saving
 UserSchema.pre('save', async function(next) {
   // Only hash the password if it has been modified (or is new)
@@ -64,8 +72,8 @@ UserSchema.pre('save', async function(next) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error: any) {
-    next(error);
+  } catch (error) {
+    next(error instanceof Error ? error : new Error('Unknown error during password hashing'));
   }
 });
 
@@ -76,14 +84,12 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
 
 // Generate JWT token
 UserSchema.methods.generateAuthToken = function(): string {
-  const secret = process.env.JWT_SECRET || 'jwt-secret';
-  const expiresIn: SignOptions['expiresIn'] = process.env.JWT_EXPIRE && !isNaN(Number(process.env.JWT_EXPIRE))
-    ? Number(process.env.JWT_EXPIRE)
-    : (process.env.JWT_EXPIRE as SignOptions['expiresIn']) || '7d';
-  const options: SignOptions = { expiresIn };
+  const options: SignOptions = {
+    expiresIn: config.JWT_EXPIRE as jwt.SignOptions['expiresIn']
+  };
   return jwt.sign(
     { id: this._id.toString(), username: this.username, role: this.role },
-    secret,
+    config.JWT_SECRET,
     options
   );
 };

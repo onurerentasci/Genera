@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import Art from '../models/Art';
+import { NotFoundError } from '../utils/errors';
+import { HTTP_STATUS } from '../constants';
 
 // Get user profile by username
 export const getUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

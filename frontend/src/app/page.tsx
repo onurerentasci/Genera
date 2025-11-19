@@ -2,12 +2,12 @@
 'use client';
 
 import Navbar from "@/components/Navbar";
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import ArtCard from "@/components/ArtCard";
-import axios from "axios";
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import LiveCounter from '@/components/LiveCounter';
+import { useArts } from '@/hooks/useSWR';
 import './fullPageLoader.css';
 
 interface Art {
@@ -28,48 +28,41 @@ interface Art {
 export default function Home() {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
-  const [arts, setArts] = useState<Art[]>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingArts, setIsLoadingArts] = useState(false);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      const fetchArts = async () => {
-        setIsLoadingArts(true);        try {
-          const response = await axios.get(
-            `/api/art/timeline`,
-            {
-              params: { page, limit: 10 },
-            }
-          );
-          
-          // Sayfa 1'se, sanat eserlerini tamamen değiştir, değilse mevcut listeye ekle
-          if (page === 1) {
-            setArts(response.data.data);
-          } else {
-            setArts((prev) => [...prev, ...response.data.data]);
-          }
-          
-          setHasMore(
-            response.data.pagination.page *
-              response.data.pagination.limit <
-              response.data.pagination.total
-          );
-        } catch (error) {
-          console.error("Error fetching timeline:", error);
-        } finally {
-          setIsLoadingArts(false);
-        }
-      };
-
-      fetchArts();
+  
+  // Use SWR for data fetching with pagination
+  const { data, error, isLoading } = useArts(page, 10);
+  
+  // Accumulate arts across pages for infinite scroll
+  const [accumulatedArts, setAccumulatedArts] = useState<Art[]>([]);
+  
+  // When data changes, update accumulated arts
+  useMemo(() => {
+    if (data?.data) {
+      if (page === 1) {
+        setAccumulatedArts(data.data);
+      } else {
+        setAccumulatedArts(prev => {
+          const existingIds = new Set(prev.map(art => art._id));
+          const newArts = data.data.filter((art: Art) => !existingIds.has(art._id));
+          return [...prev, ...newArts];
+        });
+      }
     }
-  }, [page, isAuthenticated]);
+  }, [data, page]);
+  
+  const hasMore = data?.pagination ? 
+    data.pagination.page * data.pagination.limit < data.pagination.total : 
+    false;
 
   const loadMore = () => {
-    if (hasMore) setPage((prev) => prev + 1);
+    if (hasMore && !isLoading) setPage((prev) => prev + 1);
   };
+  
+  // Handle SWR error
+  if (error && isAuthenticated) {
+    console.error("Error fetching timeline:", error);
+  }
 
   // Show loading spinner while authentication state is being determined
   if (isAuthLoading) {
@@ -155,7 +148,7 @@ export default function Home() {
         </div>
         
         <div className="gallery-grid">
-          {isLoadingArts && page === 1 ? (
+          {isLoading && page === 1 ? (
             // Initial loading state
             Array.from({ length: 9 }).map((_, index) => (
               <div key={index} className="skeleton-card">
@@ -166,7 +159,7 @@ export default function Home() {
                 </div>
               </div>
             ))          ) : (
-            arts.map((art, index) => (
+            accumulatedArts.map((art, index) => (
               <div key={`${art._id}-${index}`} className="art-card-wrapper">                <ArtCard 
                   id={art._id}
                   imageUrl={art.imageUrl} 
@@ -183,7 +176,7 @@ export default function Home() {
                     if (!user) return;
                     
                     // Update local state when a like/unlike happens
-                    setArts(arts.map(a => 
+                    setAccumulatedArts(accumulatedArts.map(a => 
                       a._id === id 
                         ? { 
                             ...a, 
@@ -199,9 +192,8 @@ export default function Home() {
               </div>
             ))
           )}
-          
           {/* Load more loading state */}
-          {isLoadingArts && page > 1 && (
+          {isLoading && page > 1 && (
             Array.from({ length: 3 }).map((_, index) => (
               <div key={`loading-${index}`} className="skeleton-card">
                 <div className="skeleton-image"></div>
@@ -214,7 +206,7 @@ export default function Home() {
           )}
         </div>
         
-        {hasMore && !isLoadingArts && (
+        {hasMore && !isLoading && (
           <div className="load-more-container">
             <button onClick={loadMore} className="load-more-button">
               <span>Load More Artworks</span>
@@ -223,7 +215,7 @@ export default function Home() {
           </div>
         )}
         
-        {!hasMore && arts.length > 0 && (
+        {!hasMore && accumulatedArts.length > 0 && (
           <div className="end-message">
             <p>You've reached the end of your timeline ✨</p>
           </div>        )}

@@ -1,6 +1,8 @@
 import { Server } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { updateOnlineUsers } from '../controllers/stats.controller';
+import logger from '../utils/logger';
+import { config } from '../config/env.config';
 
 interface OnlineUser {
   id: string;
@@ -16,11 +18,7 @@ class SocketService {
   constructor(server: HttpServer) {
     this.io = new Server(server, {
       cors: {
-        origin: [
-          process.env.FRONTEND_URL || 'http://localhost:3000',
-          'http://localhost:3001',
-          'http://127.0.0.1:3000'
-        ],
+        origin: config.FRONTEND_URL,
         methods: ['GET', 'POST'],
         credentials: true
       }
@@ -31,7 +29,7 @@ class SocketService {
 
   private initializeSocketHandlers(): void {
     this.io.on('connection', (socket) => {
-      console.log(`🔗 User connected: ${socket.id}`);
+      logger.debug('User connected', { socketId: socket.id });
 
       // Kullanıcı online listesine ekle
       socket.on('user-online', (userData) => {
@@ -46,14 +44,14 @@ class SocketService {
         this.broadcastOnlineUsers();
         this.updateOnlineUsersCount();
         
-        console.log(`👤 User ${user.username} is now online`);
+        logger.info('User is now online', { username: user.username, userId: user.id });
       });
 
       // Kullanıcı offline olduğunda
       socket.on('disconnect', () => {
         const user = this.onlineUsers.get(socket.id);
         if (user) {
-          console.log(`👋 User ${user.username} disconnected`);
+          logger.info('User disconnected', { username: user.username });
           this.onlineUsers.delete(socket.id);
           this.broadcastOnlineUsers();
           this.updateOnlineUsersCount();
@@ -114,7 +112,7 @@ class SocketService {
     try {
       await updateOnlineUsers(this.onlineUsers.size);
     } catch (error) {
-      console.error('Failed to update online users count:', error);
+      logger.error('Failed to update online users count', { error });
     }
   }
 

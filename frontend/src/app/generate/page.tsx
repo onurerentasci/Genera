@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import './styles.css';
+import type { GenerateArtRequest, GenerateArtResponse, SubmitArtRequest } from '@/types/api.types';
 
 export default function GeneratePage() {
   const router = useRouter();
@@ -110,12 +111,12 @@ export default function GeneratePage() {
     setGenerationError(null);
     setIsGenerating(true);
       try {
-      const requestData: any = { prompt: prompt.trim() };
+      const requestData: GenerateArtRequest = { prompt: prompt.trim() };
       if (selectedStyle) {
         requestData.style = selectedStyle;
       }
 
-      const response = await axios.post(
+      const response = await axios.post<GenerateArtResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/api/art/generate`, 
         requestData, 
         { withCredentials: true }

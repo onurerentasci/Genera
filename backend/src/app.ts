@@ -2,9 +2,10 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
 import path from 'path';
+import { config } from './config/env.config';
+import { TIME } from './constants';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 // CSRF Protection
 import csrfProtection, { provideCsrfToken, getCsrfToken, conditionalCsrfProtection } from './middleware/csrf.middleware';
@@ -21,9 +22,6 @@ import debugRoutes from './routes/debug.routes';
 import statsRoutes from './routes/stats.routes';
 import testRoutes from './routes/test.routes';
 
-// Initialize environment variables
-dotenv.config();
-
 // Create Express app
 const app: Express = express();
 
@@ -32,12 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-  ],
+  origin: config.FRONTEND_URL,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-CSRF-Token', 'CSRF-Token', 'X-XSRF-Token'],
@@ -46,18 +39,17 @@ app.use(cors({
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'genera-secret-key',
+  secret: config.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    secure: config.NODE_ENV === 'production',
+    maxAge: TIME.ONE_DAY_MS
   }
 }));
 
 // CSRF Protection - Apply conditionally to skip public endpoints
-// Temporarily disabled for debugging
-// app.use(conditionalCsrfProtection);
+app.use(conditionalCsrfProtection);
 app.use(provideCsrfToken);
 
 // CSRF token endpoint - needs to be before other routes
@@ -84,10 +76,10 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Genera API is running' });
 });
 
+// 404 handler for undefined routes
+app.use(notFoundHandler);
+
 // Global error-handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Internal Server Error' });
-});
+app.use(errorHandler);
 
 export default app;

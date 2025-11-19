@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useStats } from '../context/StatsContext';
+import { useStats, useOnlineUsers } from '../hooks/useSWR';
 import './LiveCounter.css';
 
 interface LiveCounterProps {
@@ -17,7 +17,8 @@ export default function LiveCounter({
   showOnline = true,
   className = ''
 }: LiveCounterProps) {
-  const { stats, onlineCount, isLoading } = useStats();
+  const { data: statsData, isLoading: statsLoading } = useStats();
+  const { data: onlineData, isLoading: onlineLoading } = useOnlineUsers();
   const [isVisible, setIsVisible] = useState(false);
 
   // Component mount edildiğinde göster
@@ -25,6 +26,10 @@ export default function LiveCounter({
     const timer = setTimeout(() => setIsVisible(true), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  const isLoading = statsLoading || onlineLoading;
+  const stats = statsData?.data || { totalVisits: 0 };
+  const onlineCount = onlineData?.data?.onlineUsers || 0;
 
   if (isLoading || (!showVisitors && !showOnline)) {
     return null;

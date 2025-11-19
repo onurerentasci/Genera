@@ -1,7 +1,10 @@
 import { Request, Response } from 'express';
-import Art from '../models/Art';
+import Art, { IComment } from '../models/Art';
 import mongoose from 'mongoose';
 import HuggingFaceService from '../services/huggingface.service';
+import logger from '../utils/logger';
+import { ValidationError, NotFoundError, UnauthorizedError } from '../utils/errors';
+import { HTTP_STATUS } from '../constants';
 
 // Generate art using Hugging Face Stable Diffusion
 export const generateArt = async (req: Request, res: Response): Promise<void> => {
@@ -9,9 +12,10 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
     const { prompt, style } = req.body;
 
     if (!prompt || prompt.trim() === '') {
-      res.status(400).json({ success: false, message: 'Prompt is required' });
-      return;
-    }    console.log('Generating image for prompt:', prompt, 'with style:', style);
+      throw new ValidationError('Prompt is required');
+    }
+
+    logger.debug('Generating image for prompt', { promptLength: prompt.length, hasStyle: !!style });
 
     try {
       // Create Hugging Face service instance
@@ -25,22 +29,23 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
       // Create public URL for the image
       const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
       
-      console.log('Image generated successfully:', imageUrl);
+      logger.info('Image generated successfully', { filename });
       
       res.status(200).json({ 
         success: true, 
         imageUrl: imageUrl,
         message: 'Image generated successfully using AI'
       });
-    } catch (hfError: any) {
-      console.error('Hugging Face generation error:', hfError.message);
+    } catch (hfError) {
+      const errorMessage = hfError instanceof Error ? hfError.message : 'Unknown error';
+      logger.error('Hugging Face generation error', { error: errorMessage });
       
       // Provide more specific error messages to the user
-      let errorMessage = 'AI generation temporarily unavailable';
-      if (hfError.message.includes('quota')) {
-        errorMessage = 'AI service quota exceeded. Please try again later.';
-      } else if (hfError.message.includes('loading')) {
-        errorMessage = 'AI model is loading. Please try again in a few moments.';
+      let userMessage = 'AI generation temporarily unavailable';
+      if (errorMessage.includes('quota')) {
+        userMessage = 'AI service quota exceeded. Please try again later.';
+      } else if (errorMessage.includes('loading')) {
+        userMessage = 'AI model is loading. Please try again in a few moments.';
       }
       
       // Fallback to placeholder if HF fails
@@ -49,11 +54,12 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
         success: true, 
         imageUrl: fallbackImageUrl,
         message: 'Generated using fallback service',
-        warning: errorMessage
+        warning: userMessage
       });
     }
-  } catch (error: any) {
-    console.error('Error generating art:', error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error generating art', { error: errorMessage });
     
     // Final fallback
     const { prompt } = req.body;
@@ -71,19 +77,17 @@ export const generateArt = async (req: Request, res: Response): Promise<void> =>
 // Submit art
 export const submitArt = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log("Backend: submitArt called with body:", req.body);
-    console.log("Backend: User from token:", req.user);
-    
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const { title, prompt, imageUrl } = req.body;
     const userId = req.user.id;
 
     if (!title || !prompt || !imageUrl) {
-      console.log("Backend: Missing required fields:", { title, prompt, imageUrl });
-      res.status(400).json({ success: false, message: 'Title, prompt, and imageUrl are required' });
-      return;
-    }    console.log("Backend: Creating new art with data:", { title, prompt, imageUrl, userId });
+      throw new ValidationError('Title, prompt, and imageUrl are required');
+    }
 
-    console.log("🚨 Backend: About to create new Art document...");
     // Create new art document using new + save pattern to ensure pre-save hooks run
     const newArt = new Art({
       title,
@@ -92,52 +96,56 @@ export const submitArt = async (req: Request, res: Response): Promise<void> => {
       createdBy: userId,
     });
 
-    console.log("🚨 Backend: About to call save()...");
     // Save the document (this will trigger the pre-save hook)
     const savedArt = await newArt.save();
 
-    console.log("🚨 Backend: Art.save() completed successfully!");
-    console.log("🚨 Backend: Saved art:", JSON.stringify(savedArt, null, 2));
-
-    console.log("Backend: Art created successfully:", savedArt);
+    logger.info('Art created successfully', { artId: savedArt._id, userId });
     res.status(201).json({ success: true, art: savedArt });
-  } catch (error: any) {
-    console.error('Backend: Error submitting art:', error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logger.error('Error submitting art', { error: errorMessage });
     
     // Provide more detailed error information
-    if (error.name === 'ValidationError') {
-      console.error('Backend: Validation error details:', error.errors);
-      res.status(400).json({ 
-        success: false, 
-        message: 'Validation failed', 
-        details: error.errors 
-      });
-    } else if (error.code === 11000) {
-      console.error('Backend: Duplicate key error:', error.keyPattern);
-      res.status(400).json({ 
-        success: false, 
-        message: 'Duplicate entry', 
-        details: error.keyPattern 
-      });
-    } else {
-      res.status(500).json({ 
-        success: false, 
-        message: 'Failed to submit art',
-        error: error.message 
-      });
+    if (error && typeof error === 'object') {
+      if ('name' in error && error.name === 'ValidationError') {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Validation failed', 
+          details: 'errors' in error ? error.errors : undefined
+        });
+        return;
+      }
+      
+      if ('code' in error && error.code === 11000) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Duplicate entry', 
+          details: 'keyPattern' in error ? error.keyPattern : undefined
+        });
+        return;
+      }
     }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to submit art',
+      error: errorMessage
+    });
   }
 };
 
 // Like art
 export const likeArt = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const { artId } = req.params;
     const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(artId)) {
-      res.status(400).json({ success: false, message: 'Invalid art ID' });
-      return;
+      throw new ValidationError('Invalid art ID format');
     }
 
     const art = await Art.findById(artId);
@@ -148,15 +156,15 @@ export const likeArt = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Check if user already liked this art
-    const alreadyLiked = art.likes.includes(userId);
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const alreadyLiked = art.likes.some(like => like.toString() === userId);
     
     if (alreadyLiked) {
-      res.status(400).json({ success: false, message: 'Art already liked by this user' });
-      return;
+      throw new ValidationError('Art already liked by this user');
     }
 
     // Add user to likes array and increment likesCount
-    art.likes.push(userId);
+    art.likes.push(userObjectId as any as mongoose.Schema.Types.ObjectId);
     art.likesCount = art.likes.length;
     
     await art.save();
@@ -167,20 +175,23 @@ export const likeArt = async (req: Request, res: Response): Promise<void> => {
       likesCount: art.likesCount
     });
   } catch (error) {
-    console.error('Error liking art:', error);
-    res.status(500).json({ success: false, message: 'Failed to like art' });
+    logger.error('Error liking art', { error });
+    throw error;
   }
 };
 
 // Unlike art
 export const unlikeArt = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const { artId } = req.params;
     const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(artId)) {
-      res.status(400).json({ success: false, message: 'Invalid art ID' });
-      return;
+      throw new ValidationError('Invalid art ID format');
     }
 
     const art = await Art.findById(artId);
@@ -194,8 +205,7 @@ export const unlikeArt = async (req: Request, res: Response): Promise<void> => {
     const likeIndex = art.likes.findIndex(id => id.toString() === userId);
     
     if (likeIndex === -1) {
-      res.status(400).json({ success: false, message: 'Art not liked by this user' });
-      return;
+      throw new ValidationError('Art not liked by this user');
     }
 
     // Remove user from likes array and update likesCount
@@ -210,41 +220,42 @@ export const unlikeArt = async (req: Request, res: Response): Promise<void> => {
       likesCount: art.likesCount
     });
   } catch (error) {
-    console.error('Error unliking art:', error);
-    res.status(500).json({ success: false, message: 'Failed to unlike art' });
+    logger.error('Error unliking art', { error });
+    throw error;
   }
 };
 
 // Add comment to art
 export const addComment = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const { artId } = req.params;
     const { text } = req.body;
     const userId = req.user.id;
 
     if (!text || text.trim() === '') {
-      res.status(400).json({ success: false, message: 'Comment text is required' });
-      return;
+      throw new ValidationError('Comment text is required');
     }
 
     if (!mongoose.Types.ObjectId.isValid(artId)) {
-      res.status(400).json({ success: false, message: 'Invalid art ID' });
-      return;
+      throw new ValidationError('Invalid art ID format');
     }
 
     const art = await Art.findById(artId);
     
     if (!art) {
-      res.status(404).json({ success: false, message: 'Art not found' });
-      return;
+      throw new NotFoundError('Art not found');
     }
 
-    // Add comment to art
+    // Add comment
     const newComment = {
       text,
-      createdBy: userId,
+      createdBy: new mongoose.Types.ObjectId(userId) as any as mongoose.Schema.Types.ObjectId,
       createdAt: new Date()
-    };
+    } as IComment;
 
     art.comments.push(newComment);
     art.commentsCount = art.comments.length;
@@ -272,8 +283,8 @@ export const addComment = async (req: Request, res: Response): Promise<void> => 
       commentsCount: art.commentsCount
     });
   } catch (error) {
-    console.error('Error adding comment:', error);
-    res.status(500).json({ success: false, message: 'Failed to add comment' });
+    logger.error('Error adding comment', { error });
+    throw error;
   }
 };
 
@@ -312,8 +323,8 @@ export const getArtById = async (req: Request, res: Response): Promise<void> => 
       data: art
     });
   } catch (error) {
-    console.error('Error getting art details:', error);
-    res.status(500).json({ success: false, message: 'Failed to get art details' });
+    logger.error('Error getting art details', { error });
+    throw error;
   }
 };
 
@@ -333,8 +344,8 @@ export const trackView = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Increment view count
-    const art = await Art.findByIdAndUpdate(
-      artId, 
+    const art = await Art.findOneAndUpdate(
+      query, 
       { $inc: { views: 1 } },
       { new: true }
     );
@@ -349,20 +360,23 @@ export const trackView = async (req: Request, res: Response): Promise<void> => {
       views: art.views
     });
   } catch (error) {
-    console.error('Error tracking view:', error);
-    res.status(500).json({ success: false, message: 'Failed to track view' });
+    logger.error('Error tracking view', { error });
+    throw error;
   }
 };
 
 // Delete a comment
 export const deleteComment = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+
     const { commentId } = req.params;
     const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
-      res.status(400).json({ success: false, message: 'Invalid comment ID' });
-      return;
+      throw new ValidationError('Invalid comment ID format');
     }
 
     // Find the art containing the comment
@@ -371,8 +385,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
     });
     
     if (!art) {
-      res.status(404).json({ success: false, message: 'Comment not found' });
-      return;
+      throw new NotFoundError('Comment not found');
     }    // Find the comment
     const commentIndex = art.comments.findIndex(
       comment => {
@@ -382,8 +395,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
     );
 
     if (commentIndex === -1) {
-      res.status(404).json({ success: false, message: 'Comment not found' });
-      return;
+      throw new NotFoundError('Comment not found');
     }
 
     const comment = art.comments[commentIndex];
@@ -406,7 +418,7 @@ export const deleteComment = async (req: Request, res: Response): Promise<void> 
       commentsCount: art.commentsCount
     });
   } catch (error) {
-    console.error('Error deleting comment:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete comment' });
+    logger.error('Error deleting comment', { error });
+    throw error;
   }
 };

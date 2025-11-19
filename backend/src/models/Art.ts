@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import slugify from 'slugify';
+import logger from '../utils/logger';
 
 export interface IComment {
   _id?: mongoose.Types.ObjectId; // Using Types.ObjectId instead of Schema.Types.ObjectId
@@ -13,6 +14,7 @@ export interface IArt extends Document {
   slug: string;
   prompt: string;
   imageUrl: string;
+  thumbnailUrl?: string; // Optional thumbnail
   createdBy: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
   likes: mongoose.Schema.Types.ObjectId[];
@@ -28,7 +30,8 @@ const ArtSchema = new Schema<IArt>(
       type: String,
       required: true,
       trim: true,
-    },    slug: {
+    },
+    slug: {
       type: String,
       required: false, 
       unique: true,
@@ -40,6 +43,10 @@ const ArtSchema = new Schema<IArt>(
     imageUrl: {
       type: String,
       required: true,
+    },
+    thumbnailUrl: {
+      type: String,
+      required: false, // Optional for backward compatibility
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -77,23 +84,33 @@ const ArtSchema = new Schema<IArt>(
       type: Number,
       default: 0
     }
-  },  {
+  },
+  {
     timestamps: true,
   }
 );
 
+// Indexes for better query performance
+ArtSchema.index({ createdBy: 1, createdAt: -1 }); // User's art timeline
+ArtSchema.index({ slug: 1 }, { unique: true }); // Unique slug lookup
+ArtSchema.index({ likesCount: -1 }); // Popular/trending arts
+ArtSchema.index({ createdAt: -1 }); // Recent arts
+ArtSchema.index({ views: -1 }); // Most viewed arts
+
 // Generate slug from title
 ArtSchema.pre('save', async function(next) {
-  console.log('🚨 Art pre-save hook called!');
-  console.log('🚨 isNew:', this.isNew);
-  console.log('🚨 isModified(title):', this.isModified('title'));
-  console.log('🚨 Current title:', this.title);
-  console.log('🚨 Current slug:', this.slug);
+  logger.debug('Art pre-save hook called', { 
+    isNew: this.isNew, 
+    isModifiedTitle: this.isModified('title'),
+    title: this.title,
+    currentSlug: this.slug
+  });
   
   // Always generate slug for new documents or when title is modified
   if (this.isNew || this.isModified('title')) {
     try {
-      console.log('Generating slug for title:', this.title);
+      logger.debug('Generating slug for title', { title: this.title });
+      
       // Generate base slug from title
       let baseSlug = slugify(this.title, { 
         lower: true,     // Convert to lowercase
@@ -101,12 +118,12 @@ ArtSchema.pre('save', async function(next) {
         trim: true       // Trim spaces
       });
       
-      console.log('Base slug generated:', baseSlug);
+      logger.debug('Base slug generated', { baseSlug });
       
       // If baseSlug is empty (all special chars), use a default
       if (!baseSlug) {
         baseSlug = 'art';
-        console.log('Using default base slug:', baseSlug);
+        logger.debug('Using default base slug', { baseSlug });
       }
       
       // Generate a unique slug with timestamp and random suffix
@@ -114,7 +131,7 @@ ArtSchema.pre('save', async function(next) {
       const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
       let slug = `${baseSlug}-${timestamp}-${randomSuffix}`;
       
-      console.log('Generated slug before uniqueness check:', slug);
+      logger.debug('Generated slug before uniqueness check', { slug });
       
       // Ensure slug is unique (check for duplicates)
       let counter = 0;
@@ -122,13 +139,13 @@ ArtSchema.pre('save', async function(next) {
       while (await mongoose.model('Art').findOne({ slug: slug })) {
         counter++;
         slug = `${originalSlug}-${counter}`;
-        console.log('Slug collision detected, trying:', slug);
+        logger.debug('Slug collision detected, trying', { slug, counter });
       }
       
-      console.log('Final slug assigned:', slug);
+      logger.debug('Final slug assigned', { slug });
       this.slug = slug;
     } catch (error) {
-      console.error('Error in pre-save hook:', error);
+      logger.error('Error in pre-save hook', { error });
       return next(error as Error);
     }
   }
@@ -136,12 +153,13 @@ ArtSchema.pre('save', async function(next) {
   // Ensure slug is always present before saving
   if (!this.slug) {
     const error = new Error('Slug generation failed - slug is required');
-    console.error('🚨 Slug validation failed:', error.message);
+    logger.error('Slug validation failed', { error: error.message });
     return next(error);
   }
   
-  console.log('🚨 Pre-save hook completed successfully, slug:', this.slug);
+  logger.debug('Pre-save hook completed successfully', { slug: this.slug });
   next();
 });
+
 
 export default mongoose.model<IArt>('Art', ArtSchema);

@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { HydratedDocument } from 'mongoose';
 import User, { IUser } from '../models/User';
+import { ValidationError, UnauthorizedError, NotFoundError } from '../utils/errors';
+import { HTTP_STATUS } from '../constants';
+import logger from '../utils/logger';
 
 // Register a new user
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -8,8 +11,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const { username, email, password } = req.body;
     const userExists = await User.findOne({ $or: [{ email }, { username }] });
     if (userExists) {
-      res.status(400).json({ success: false, message: 'A user with this email or username already exists' });
-      return;
+      throw new ValidationError('A user with this email or username already exists');
     }
 
     // Create new user
@@ -28,7 +30,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });    res.status(201).json({
+    });    res.status(HTTP_STATUS.CREATED).json({
       success: true,
       message: 'User registered successfully',
       token,
@@ -43,8 +45,8 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       }
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, message: 'An error occurred while registering the user' });
+    logger.error('Register error', { error });
+    throw error;
   }
 };
 
@@ -55,21 +57,13 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const user: HydratedDocument<IUser> | null = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      res.status(401).json({ 
-        success: false, 
-        message: 'Invalid email or password' 
-      });
-      return;
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     // Check if password matches
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      res.status(401).json({ 
-        success: false, 
-        message: 'Invalid email or password' 
-      });
-      return;
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     // Generate token
@@ -81,7 +75,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       token,
       user: {
@@ -95,8 +89,8 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'An error occurred while logging in' });
+    logger.error('Login error', { error });
+    throw error;
   }
 };
 
@@ -107,12 +101,8 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
     const user: HydratedDocument<IUser> | null = await User.findById((req as any).user.id);
 
     if (!user) {
-      res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-      return;
-    }    res.status(200).json({
+      throw new NotFoundError('User not found');
+    }    res.status(HTTP_STATUS.OK).json({
       success: true,
       user: {
         id: user._id,
@@ -125,10 +115,7 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
       }
     });
   } catch (error) {
-    console.error('Get me error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error while retrieving user profile'
-    });
+    logger.error('Get me error', { error });
+    throw error;
   }
 };

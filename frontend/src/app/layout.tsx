@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { StatsProvider } from "@/context/StatsContext";
 import { CsrfProvider } from "@/context/CsrfContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,19 +27,22 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {  return (
+}>) {
+  return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning // Suppresses hydration warnings for class mismatches
       >
-        <CsrfProvider>
-          <AuthProvider>
-            <StatsProvider>
-              {children}
-            </StatsProvider>
-          </AuthProvider>
-        </CsrfProvider>
+        <ErrorBoundary>
+          <CsrfProvider>
+            <AuthProvider>
+              <StatsProvider>
+                {children}
+              </StatsProvider>
+            </AuthProvider>
+          </CsrfProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

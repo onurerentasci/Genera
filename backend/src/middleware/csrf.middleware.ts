@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import csrf from 'csurf';
+import logger from '../utils/logger';
 
 // Extend Request interface for CSRF
 declare global {
@@ -40,10 +41,10 @@ export const conditionalCsrfProtection = (req: Request, res: Response, next: Nex
   
   // Skip CSRF protection for development environment or public endpoints
   if (process.env.NODE_ENV === 'development' || publicEndpoints.includes(path)) {
-    console.log(`🔓 Skipping CSRF protection for ${req.method} ${path} (dev mode or public endpoint)`);
+    logger.debug('Skipping CSRF protection', { method: req.method, path, reason: 'dev mode or public endpoint' });
     next();
   } else {
-    console.log(`🔒 Applying CSRF protection for ${req.method} ${path}`);
+    logger.debug('Applying CSRF protection', { method: req.method, path });
     csrfProtection(req, res, next);
   }
 };
@@ -56,7 +57,7 @@ export const provideCsrfToken = (req: Request, res: Response, next: NextFunction
       res.locals.csrfToken = req.csrfToken();
     }
   } catch (error) {
-    console.error('Error providing CSRF token:', error);
+    logger.error('Error providing CSRF token', { error });
   }
   next();
 };
@@ -72,7 +73,7 @@ export const getCsrfToken = [
         csrfToken: token
       });
     } catch (error) {
-      console.error('Error getting CSRF token:', error);
+      logger.error('Error getting CSRF token', { error });
       res.status(500).json({
         success: false,
         message: 'Failed to generate CSRF token'
